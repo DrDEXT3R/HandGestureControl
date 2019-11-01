@@ -4,6 +4,14 @@ import numpy as np
 ESC = 27
 cap = cv2.VideoCapture(0)
 
+
+def nothing(x):
+    pass
+
+cv2.namedWindow('Settings')
+cv2.createTrackbar('threshold', 'Settings', 50, 255, nothing)
+
+
 #backSub = cv2.createBackgroundSubtractorMOG2()
 #backSub = cv2.createBackgroundSubtractorMOG2(0, 100)
 backSub = cv2.createBackgroundSubtractorKNN()
@@ -12,7 +20,17 @@ while True:
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
 
+
     fgMask = backSub.apply(frame)
+
+    fgMask_t = fgMask
+
+    threshold = cv2.getTrackbarPos('threshold', 'Settings')
+    _, fgMask_t = cv2.threshold(fgMask_t, threshold, 255, cv2.THRESH_BINARY)
+
+
+    
+    
     
 
 
@@ -38,7 +56,7 @@ while True:
 
     cv2.imshow('FG Mask', fgMask)
 
-    cv2.imshow('Res', binary)
+    cv2.imshow('Binary', fgMask_t)
 
 
     #gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
