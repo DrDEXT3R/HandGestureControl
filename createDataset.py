@@ -6,11 +6,10 @@ import os
 def pretreatment(img):
     img = cv2.bilateralFilter(img,5,50,100)
     img = cv2.bilateralFilter(img,9,75,75)
-    img = cv2.flip(img, 1)
     return img
 
 
-def getROI(img):
+def getROI(img, img_org):
     # ROI parameters
     bound_size = 2
     x1_roi = int(0.5*img.shape[1]) - bound_size
@@ -18,7 +17,7 @@ def getROI(img):
     x2_roi = img.shape[1]-10 + bound_size
     y2_roi = int(0.5*img.shape[1]) + bound_size
 
-    cv2.rectangle(img, (x1_roi, y1_roi), (x2_roi, y2_roi), (0,255,0), bound_size)
+    cv2.rectangle(img_org, (x1_roi, y1_roi), (x2_roi, y2_roi), (0,255,0), bound_size)
     return img[y1_roi+bound_size:y2_roi-bound_size, x1_roi+bound_size:x2_roi-bound_size]
 
 
@@ -89,8 +88,9 @@ backSub = cv2.createBackgroundSubtractorKNN()
 cap = cv2.VideoCapture(0)
 
 while True:
-    _, frame = cap.read()
-    frame = pretreatment(frame)
+    _, frame_org = cap.read()
+    frame_org = cv2.flip(frame_org, 1)
+    frame = pretreatment(frame_org)
 
 
     # Count the number of images of each gesture
@@ -101,12 +101,12 @@ while True:
     # Display the number of images of each gesture
     display_step = 10
     for i in reversed(range( len(os.listdir(dir)) )):
-        cv2.putText(frame, "/0" + str(i) + ": "+ str(img_sum[i]), (10, frame.shape[0] - display_step), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255), 1)
+        cv2.putText(frame_org, "/0" + str(i) + ": "+ str(img_sum[i]), (10, frame_org.shape[0] - display_step), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255), 1)
         display_step = display_step + 20
-    cv2.putText(frame, "Counter", (10, frame.shape[0] - display_step - 10), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255), 1)
+    cv2.putText(frame_org, "Counter", (10, frame_org.shape[0] - display_step - 10), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255), 1)
 
 
-    roi = getROI(frame)
+    roi = getROI(frame, frame_org)
 
     fgMask = bgSubtraction(roi)
 
@@ -120,7 +120,7 @@ while True:
     fgMask_filled = cv2.resize(fgMask_filled, (128, 128))
 
 
-    cv2.imshow("Frame", frame)
+    cv2.imshow("Frame", frame_org)
     img_concatenation = np.concatenate((fgMask, fgMask_filled), axis=1)
     cv2.imshow("Preview: binary & filled", img_concatenation) 
 
