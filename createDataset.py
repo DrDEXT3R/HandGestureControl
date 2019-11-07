@@ -130,17 +130,17 @@ while True:
     if k & 0xFF == ESC:
         break
     if k & 0xFF == ord('0'):
-        cv2.imwrite(dir + '00/' + str(img_sum[0]) + '.jpg', fgMask)
+        cv2.imwrite(dir + '00/' + str(img_sum[0]) + '.jpg', fgMask_filled)
     if k & 0xFF == ord('1'):
-        cv2.imwrite(dir + '01/' + str(img_sum[1]) + '.jpg', fgMask)
+        cv2.imwrite(dir + '01/' + str(img_sum[1]) + '.jpg', fgMask_filled)
     if k & 0xFF == ord('2'):
-        cv2.imwrite(dir + '02/' + str(img_sum[2]) + '.jpg', fgMask)
+        cv2.imwrite(dir + '02/' + str(img_sum[2]) + '.jpg', fgMask_filled)
     if k & 0xFF == ord('3'):
-        cv2.imwrite(dir + '03/' + str(img_sum[3]) + '.jpg', fgMask)
+        cv2.imwrite(dir + '03/' + str(img_sum[3]) + '.jpg', fgMask_filled)
     if k & 0xFF == ord('4'):
-        cv2.imwrite(dir + '04/' + str(img_sum[4]) + '.jpg', fgMask)
+        cv2.imwrite(dir + '04/' + str(img_sum[4]) + '.jpg', fgMask_filled)
     if k & 0xFF == ord('5'):
-        cv2.imwrite(dir + '05/' + str(img_sum[5]) + '.jpg', fgMask)
+        cv2.imwrite(dir + '05/' + str(img_sum[5]) + '.jpg', fgMask_filled)
     
 
 cap.release()
