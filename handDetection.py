@@ -1,73 +1,107 @@
 import cv2
 import numpy as np
+import os
+
+
+def pretreatment(img):
+    img = cv2.bilateralFilter(img,5,50,100)
+    img = cv2.bilateralFilter(img,9,75,75)
+    return img
+
+
+def getROI(img, img_org):
+    # ROI parameters
+    bound_size = 2
+    x1_roi = int(0.5*img.shape[1]) - bound_size
+    y1_roi = 10 - bound_size
+    x2_roi = img.shape[1]-10 + bound_size
+    y2_roi = int(0.5*img.shape[1]) + bound_size
+
+    cv2.rectangle(img_org, (x1_roi, y1_roi), (x2_roi, y2_roi), (0,255,0), bound_size)
+    return img[y1_roi+bound_size:y2_roi-bound_size, x1_roi+bound_size:x2_roi-bound_size]
+
+
+def bgSubtraction(img):
+    mask = backSub.apply(img)
+    _, mask = cv2.threshold(mask, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    return mask
+
+
+def morphologicalProcess(fgMask):
+    kernel = np.ones((3,3),np.uint8)
+    fgMask = cv2.dilate(fgMask,kernel,iterations = 2)
+
+    kernel = np.ones((3,3),np.uint8)
+    fgMask = cv2.morphologyEx(fgMask, cv2.MORPH_OPEN, kernel)
+
+    kernel = np.ones((5,5),np.uint8)
+    fgMask = cv2.morphologyEx(fgMask, cv2.MORPH_CLOSE, kernel)
+    return fgMask
+
+
+def fillMask(fgMask):
+    floodfilled_img = fgMask.copy()
+    
+    # Mask - flood filling (size +2 pixels)
+    h, w = fgMask.shape[:2]
+    mask = np.zeros((h+2, w+2), np.uint8)
+    
+    cv2.floodFill(floodfilled_img, mask, (0,0), 255);
+    
+    inverted = cv2.bitwise_not(floodfilled_img)
+    
+    # Get foreground (combine of two images)
+    foreground = fgMask | inverted
+    return foreground
+
 
 ESC = 27
+
+
+# Description of gestures
+# 00 - nic
+# 01 - otwarta dlon
+# 02 - OK (palce razem)
+# 03 - zacisnieta piesc
+# 04 - ronaldinho
+# 05 - pokoj
+
+
+backSub = cv2.createBackgroundSubtractorKNN()
+# backSub = cv2.createBackgroundSubtractorMOG2()
+
 cap = cv2.VideoCapture(0)
 
-
-def nothing(x):
-    pass
-
-cv2.namedWindow('Settings')
-cv2.createTrackbar('threshold', 'Settings', 50, 255, nothing)
-
-
-#backSub = cv2.createBackgroundSubtractorMOG2()
-#backSub = cv2.createBackgroundSubtractorMOG2(0, 100)
-backSub = cv2.createBackgroundSubtractorKNN()
-
 while True:
-    ret, frame = cap.read()
-    frame = cv2.flip(frame, 1)
+    _, frame_org = cap.read()
+    frame_org = cv2.flip(frame_org, 1)
+    frame = pretreatment(frame_org)
 
 
-    fgMask = backSub.apply(frame)
+    roi = getROI(frame, frame_org)
 
-    fgMask_t = fgMask
+    fgMask = bgSubtraction(roi)
 
-    threshold = cv2.getTrackbarPos('threshold', 'Settings')
-    _, fgMask_t = cv2.threshold(fgMask_t, threshold, 255, cv2.THRESH_BINARY)
+    fgMask = morphologicalProcess(fgMask)
 
-
-    
-    
-    
+    fgMask_filled = fillMask(fgMask)
 
 
-    #fgMask = backSub.apply(frame, learningRate=0)
-    #kernel = np.ones((3, 3), np.uint8)
-    #fgMask = cv2.erode(fgMask, kernel, iterations=1)
-    #res = cv2.bitwise_and(frame, frame, mask=fgMask)
+    # Resize
+    fgMask = cv2.resize(fgMask, (128, 128)) 
+    fgMask_filled = cv2.resize(fgMask_filled, (128, 128))
 
 
-    
-    cv2.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
-    cv2.putText(frame, str(cap.get(cv2.CAP_PROP_POS_FRAMES)), (15, 15),
-               cv2.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
-    
+    cv2.imshow("Frame", frame_org)
+    img_concatenation = np.concatenate((fgMask, fgMask_filled), axis=1)
+    cv2.imshow("Preview: binary & filled", img_concatenation) 
 
 
-    _, binary = cv2.threshold(fgMask, 127, 255, cv2.THRESH_BINARY)
-    
-
-    #fgMask = cv2.bilateralFilter(fgMask, 5, 50, 100) 
-    
-
-
-    cv2.imshow('FG Mask', fgMask)
-
-    cv2.imshow('Binary', fgMask_t)
-
-
-    #gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    
-
-    cv2.imshow("Camera", frame)
-
-    
+    # Exit the program or save the image (ROI)
     k = cv2.waitKey(10)
-    if k == ESC & 0xff:
+    if k & 0xFF == ESC:
         break
+    
 
 cap.release()
 cv2.destroyAllWindows()
