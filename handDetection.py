@@ -60,16 +60,23 @@ def fillMask(fgMask):
     return foreground
 
 
+def addTitle(img, title):
+    title_bg = np.full((30,128), 255, dtype=np.uint8)
+    cv2.putText(title_bg, title, (2, 20), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255), 1)
+    img = np.concatenate((title_bg, img), axis=0)
+    return img
+
+
 ESC = 27
 
 
 # Description of gestures
-# 00 - nic
-# 01 - otwarta dlon
-# 02 - OK (palce razem)
-# 03 - zacisnieta piesc
-# 04 - ronaldinho
-# 05 - pokoj
+# 00 - nic (none)
+# 01 - otwarta dlon (palm)
+# 02 - OK (palce razem) (okay)
+# 03 - zacisnieta piesc (fist)
+# 04 - ronaldinho (swing)
+# 05 - pokoj (peace)
 
 
 backSub = cv2.createBackgroundSubtractorKNN()
@@ -97,27 +104,39 @@ while True:
     fgMask_filled = cv2.resize(fgMask_filled, (128, 128))
 
 
-    cv2.imshow("Frame", frame_org)
-    img_concatenation = np.concatenate((fgMask, fgMask_filled), axis=1)
-    cv2.imshow("Preview: binary & filled", img_concatenation) 
+
+
+    img_concatenation = np.concatenate((addTitle(fgMask, "Binary"), np.full((158,50), 255, dtype=np.uint8)), axis=1)
+
+    img_concatenation = np.concatenate((img_concatenation, addTitle(fgMask_filled, "Filled")), axis=1)
+
+    img_concatenation = np.concatenate((img_concatenation, np.full((50,306), 255, dtype=np.uint8)), axis=0)
+
+
+
 
 
     # Prediction
     result = model.predict(fgMask_filled.reshape(1, 128, 128, 1))
 
-    prediction = {'00': result[0][0], 
-                  '01': result[0][1], 
-                  '02': result[0][2],
-                  '03': result[0][3],
-                  '04': result[0][4],
-                  '05': result[0][5]}
+
+    prediction = {'none': result[0][0], 
+                  'palm': result[0][1], 
+                  'okay': result[0][2],
+                  'fist': result[0][3],
+                  'swing': result[0][4],
+                  'peace': result[0][5]}
 
 
     prediction = sorted(prediction.items(), key=operator.itemgetter(1), reverse=True)
 
-    print('Result: ' + prediction[0][0])
+    cv2.putText(img_concatenation, "Detection: " + prediction[0][0], (5, 200), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255), 1)
+    cv2.imshow("Result", img_concatenation)
+
+    cv2.putText(frame_org, prediction[0][0], (int(0.5*frame.shape[1]), int(0.5*frame.shape[1]) + 30), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1)
 
 
+    cv2.imshow("Frame", frame_org)
 
 
     # Exit the program or save the image (ROI)
