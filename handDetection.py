@@ -1,6 +1,11 @@
 import cv2
 import numpy as np
 import os
+from keras.models import load_model
+from keras.preprocessing import image
+import operator
+
+model = load_model('hand_gesture_recognition.h5')
 
 
 def pretreatment(img):
@@ -95,6 +100,24 @@ while True:
     cv2.imshow("Frame", frame_org)
     img_concatenation = np.concatenate((fgMask, fgMask_filled), axis=1)
     cv2.imshow("Preview: binary & filled", img_concatenation) 
+
+
+    # Prediction
+    result = model.predict(fgMask_filled.reshape(1, 128, 128, 1))
+
+    prediction = {'00': result[0][0], 
+                  '01': result[0][1], 
+                  '02': result[0][2],
+                  '03': result[0][3],
+                  '04': result[0][4],
+                  '05': result[0][5]}
+
+
+    prediction = sorted(prediction.items(), key=operator.itemgetter(1), reverse=True)
+
+    print('Result: ' + prediction[0][0])
+
+
 
 
     # Exit the program or save the image (ROI)
