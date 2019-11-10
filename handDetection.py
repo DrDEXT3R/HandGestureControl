@@ -69,6 +69,9 @@ def addTitle(img, title):
 
 ESC = 27
 
+previousPrediction = 'none'
+delta = 1
+
 
 # Description of gestures
 # 00 - nic (none)
@@ -137,6 +140,22 @@ while True:
 
 
     cv2.imshow("Frame", frame_org)
+
+
+
+    # Gesture control
+    if prediction[0][0] != previousPrediction:
+        delta = 1
+    else:
+        if delta > 15:
+            delta = 0
+        delta = delta + 1
+    
+    previousPrediction =  prediction[0][0]
+
+    if delta == 15:
+        print('Osiągnąłem 5')
+
 
 
     # Exit the program or save the image (ROI)
