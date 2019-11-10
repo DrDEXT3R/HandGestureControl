@@ -4,6 +4,7 @@ import os
 from keras.models import load_model
 from keras.preprocessing import image
 import operator
+from pynput.keyboard import Key, Controller
 
 model = load_model('hand_gesture_recognition.h5')
 
@@ -71,6 +72,8 @@ ESC = 27
 
 previousPrediction = 'none'
 delta = 1
+control_ON = False
+keyboard = Controller()
 
 
 # Description of gestures
@@ -113,7 +116,7 @@ while True:
 
     img_concatenation = np.concatenate((img_concatenation, addTitle(fgMask_filled, "Filled")), axis=1)
 
-    img_concatenation = np.concatenate((img_concatenation, np.full((50,306), 255, dtype=np.uint8)), axis=0)
+    img_concatenation = np.concatenate((img_concatenation, np.full((100,306), 255, dtype=np.uint8)), axis=0)
 
 
 
@@ -134,12 +137,10 @@ while True:
     prediction = sorted(prediction.items(), key=operator.itemgetter(1), reverse=True)
 
     cv2.putText(img_concatenation, "Detection: " + prediction[0][0], (5, 200), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255), 1)
-    cv2.imshow("Result", img_concatenation)
-
     cv2.putText(frame_org, prediction[0][0], (int(0.5*frame.shape[1]), int(0.5*frame.shape[1]) + 30), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1)
 
 
-    cv2.imshow("Frame", frame_org)
+  
 
 
 
@@ -154,9 +155,36 @@ while True:
     previousPrediction =  prediction[0][0]
 
     if delta == 15:
-        print('Osiągnąłem 5')
+        
+        # Toggle gesture control
+        if prediction[0][0] == 'okay':
+            control_ON = not control_ON
+        
+        # Gestures
+        if control_ON == True:
+            if prediction[0][0] == 'palm':
+                keyboard.press(Key.space)
+                keyboard.release(Key.space)
+            elif prediction[0][0] == 'fist':
+                keyboard.press('m')
+                keyboard.release('m')
+            elif prediction[0][0] == 'swing':
+                keyboard.press(Key.down)
+                keyboard.release(Key.down)  
+            elif prediction[0][0] == 'peace':
+                keyboard.press(Key.up)
+                keyboard.release(Key.up)
 
 
+
+
+
+
+    
+    cv2.putText(img_concatenation, "Gesture control: " + ('ON' if control_ON == True else 'OFF'), (5, 250), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255), 1)
+
+    cv2.imshow("Result", img_concatenation)
+    cv2.imshow("Frame", frame_org)
 
     # Exit the program or save the image (ROI)
     k = cv2.waitKey(10)
