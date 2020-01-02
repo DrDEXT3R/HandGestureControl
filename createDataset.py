@@ -1,3 +1,11 @@
+# Description of gestures (directory - label name)
+# 00 - none
+# 01 - palm
+# 02 - okay
+# 03 - fist
+# 04 - swing
+# 05 - peace
+
 import cv2
 import numpy as np
 import os
@@ -72,18 +80,7 @@ if not os.path.exists(dir):
 
 img_sum = [None] * len(os.listdir(dir))
 
-
-# Description of gestures
-# 00 - nic
-# 01 - otwarta dlon
-# 02 - OK (palce razem)
-# 03 - zacisnieta piesc
-# 04 - ronaldinho
-# 05 - pokoj
-
-
 backSub = cv2.createBackgroundSubtractorKNN()
-# backSub = cv2.createBackgroundSubtractorMOG2()
 
 cap = cv2.VideoCapture(0)
 
