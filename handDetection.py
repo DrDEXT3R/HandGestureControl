@@ -1,3 +1,11 @@
+# Description of gestures (directory - label name)
+# 00 - none
+# 01 - palm
+# 02 - okay
+# 03 - fist
+# 04 - swing
+# 05 - peace
+
 import cv2
 import numpy as np
 import os
@@ -71,22 +79,12 @@ def addTitle(img, title):
 ESC = 27
 
 previousPrediction = 'none'
-delta = 1
+samePredictions = 1   # number of predictions in a row
+reactionZone = 15 
 control_ON = False
 keyboard = Controller()
 
-
-# Description of gestures
-# 00 - nic (none)
-# 01 - otwarta dlon (palm)
-# 02 - OK (palce razem) (okay)
-# 03 - zacisnieta piesc (fist)
-# 04 - ronaldinho (swing)
-# 05 - pokoj (peace)
-
-
 backSub = cv2.createBackgroundSubtractorKNN()
-# backSub = cv2.createBackgroundSubtractorMOG2()
 
 cap = cv2.VideoCapture(0)
 
@@ -110,8 +108,6 @@ while True:
     fgMask_filled = cv2.resize(fgMask_filled, (128, 128))
 
 
-
-
     img_concatenation = np.concatenate((addTitle(fgMask, "Binary"), np.full((158,50), 255, dtype=np.uint8)), axis=1)
 
     img_concatenation = np.concatenate((img_concatenation, addTitle(fgMask_filled, "Filled")), axis=1)
@@ -119,12 +115,8 @@ while True:
     img_concatenation = np.concatenate((img_concatenation, np.full((100,306), 255, dtype=np.uint8)), axis=0)
 
 
-
-
-
     # Prediction
     result = model.predict(fgMask_filled.reshape(1, 128, 128, 1))
-
 
     prediction = {'none': result[0][0], 
                   'palm': result[0][1], 
@@ -133,52 +125,44 @@ while True:
                   'swing': result[0][4],
                   'peace': result[0][5]}
 
-
     prediction = sorted(prediction.items(), key=operator.itemgetter(1), reverse=True)
+
 
     cv2.putText(img_concatenation, "Detection: " + prediction[0][0], (5, 200), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255), 1)
     cv2.putText(frame_org, prediction[0][0], (int(0.5*frame.shape[1]), int(0.5*frame.shape[1]) + 30), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1)
 
 
-  
-
-
-
     # Gesture control
     if prediction[0][0] != previousPrediction:
-        delta = 1
+        samePredictions = 1
     else:
-        if delta > 15:
-            delta = 0
-        delta = delta + 1
+        if samePredictions > reactionZone:
+            samePredictions = 0
+        samePredictions = samePredictions + 1
     
     previousPrediction =  prediction[0][0]
 
-    if delta == 15:
-        
+
+    if samePredictions == reactionZone:
+
         # Toggle gesture control
         if prediction[0][0] == 'okay':
             control_ON = not control_ON
         
-        # Gestures
+        # Gestures - VLC media player
         if control_ON == True:
-            if prediction[0][0] == 'palm':
+            if prediction[0][0] == 'palm':      # Start / Pause
                 keyboard.press(Key.space)
                 keyboard.release(Key.space)
-            elif prediction[0][0] == 'fist':
+            elif prediction[0][0] == 'fist':    # Mute / Unmute 
                 keyboard.press('m')
                 keyboard.release('m')
-            elif prediction[0][0] == 'swing':
+            elif prediction[0][0] == 'swing':   # Volume down
                 keyboard.press(Key.down)
                 keyboard.release(Key.down)  
-            elif prediction[0][0] == 'peace':
+            elif prediction[0][0] == 'peace':   # Volume up
                 keyboard.press(Key.up)
                 keyboard.release(Key.up)
-
-
-
-
-
 
     
     cv2.putText(img_concatenation, "Gesture control: " + ('ON' if control_ON == True else 'OFF'), (5, 250), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255), 1)
