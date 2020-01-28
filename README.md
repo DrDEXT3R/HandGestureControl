@@ -23,7 +23,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Hardware  
 The project has been written in such a way that it runs smoothly on a computer with average components.  
 My computer's specifications:  
-* 0.3 MPix webcam  
+* 0.3 MP webcam  
 * Intel Core i7-3610QM  
 * NVIDIA GeForce GT 630M
 * 8 GB RAM
@@ -81,4 +81,4 @@ In addition, you can install CUDA drivers and the cuDNN toolkit. Remember that y
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](https://github.com/DrDEXT3R/HandGestureControl/blob/master/LICENSE) file for details
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](https://github.com/DrDEXT3R/HandGestureControl/blob/master/LICENSE) file for details.
